@@ -1,0 +1,61 @@
+---
+title: "Normal Temperature Estimation"
+author: "Kiril Genov"
+date: "July 20, 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+## The app
+
+The Normal Temperature Estimation is a web based application that helps people estimate their body temperature based on their heart rate and gender, using a machine learning algorithm.
+
+The Normal Temperature Estimation can be found on the following link:
+
+<http://kggen.shinyapps.io/norm-temp-app>
+
+Documentation for the project can be found on this [link](http://github.com/kggen/norm-temp-app)
+
+## Architecture of the app
+
+The Normal Temperature Estimation app uses the shinyapps.io infrastructure, wich hosts the ui.R and server.R files.
+
+Technologies used include:
+
+- R
+- RStudio
+- shinyapps.io
+
+
+## The model
+
+The underlying machine learning model is *linear regression* that calculates your body temperature instantly when selecting the options in the app, i.e. heart rate and gender.
+
+The data used for training the model is the normtemp database from the UsingR library, which was contributed by Allen L. Shoemaker to the Journal of Statistics Education. More information about the dataset can be found on the follwing [link](http://www.amstat.org/publications/jse/datasets/normtemp.txt).
+
+The training dataset uses 130 measurements of body temperature and builds the model by regressing them against gender and heart rate.
+
+
+## The normtemp dataset
+
+Here's a plot of the training dataset:
+
+```{r normtemp, echo = FALSE, eval=TRUE, message=FALSE, warning=FALSE}
+normtemp<-UsingR::normtemp
+normtemp[normtemp$gender==1,]$gender<-c("Male")
+normtemp[normtemp$gender==2,]$gender<-c("Female")
+normtemp$gender<-as.factor(normtemp$gender)
+library(ggplot2)
+ggplot(normtemp, aes(x=temperature, y=hr))+
+      geom_point(aes(col=gender))+
+      theme_bw()+
+      labs(title="Temperature vs. heart rate",
+           y="Heart rate",
+           x="Temperature")
+```
+

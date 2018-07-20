@@ -1,0 +1,12 @@
+name: norm-temp-app
+title: norm-temp-app
+username:
+account: kggen
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 384727
+bundleId: 1491013
+url: https://kggen.shinyapps.io/norm-temp-app/
+when: 1532080849.4039
+asMultiple: FALSE
+asStatic: FALSE

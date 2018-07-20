@@ -1,0 +1,12 @@
+name: NormalTemp-test
+title: NormalTemp-test
+username:
+account: kggen
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 383845
+bundleId: 1489314
+url: https://kggen.shinyapps.io/NormalTemp-test/
+when: 1532010436.24222
+asMultiple: FALSE
+asStatic: FALSE

@@ -1,0 +1,171 @@
+---
+title: "Normal Temperature Estimation"
+author: "Kiril Genov"
+date: "July 20, 2018"
+output: html_document
+---
+
+
+# Documentation
+
+Documentation to the Normap Temperature Estimation Application
+
+## Web Address of the Application
+
+The Normal Temperature Estimation can be found on the following link:
+<http://kggen.shinyapps.io/norm-temp-app>
+
+## Purpose of the Application
+
+The Normal Temperature Estimation is a web based application that helps people predict their body temperature based on their heart rate and gender, using a machine learning algorithm.
+
+## How to use
+
+When opening the app, please select:
+
+- your heart rate from the slider (please note that when measuring your heart rate you should be relaxed)
+- your gender - male or female
+- the scale that you want to see your results from the drop down menu - Fahrenheit or Celsius
+
+When selecting the options, you will see the result on the right side of the screen:
+
+- the text will show what you have selected and the resulting estimation of the body temperature
+- the plot will show how your estimated body temperature compares to the sample taken of 130 people
+
+## The model
+
+The underlying machine learning model is linear regression that calculates your body temperature instantly when selecting the options in the app, i.e. heart rate and gender.
+
+The data used for training the model is the normtemp database from the UsingR library, which was contributed by Allen L. Shoemaker to the Journal of Statistics Education. More information about the dataset can be found on the follwing [link](http://www.amstat.org/publications/jse/datasets/normtemp.txt).
+
+The training dataset uses 130 measurements of body temperature and builds the model by regressing them against gender and heart rate. 
+
+Calculating the results from Fahrenheit to Celsius is done by extracting 32 and then multiplying by 5/9.
+
+## The architecture of the app
+
+The Normal Temperature Estimation app uses the shinyapps.io infrastructure, wich hosts the ui.R and server.R files.
+
+Technologies used include:
+
+- R
+- RStudio
+- shinyapps.io
+
+## The code
+
+The underlying code is divided into two files: ui.R and server.R.
+
+### Prerequisite libraies
+
+The following libraries are used in this app:
+```{r libraies, echo = TRUE, eval=FALSE, message=FALSE}
+library(shiny)
+library(UsingR)
+library(ggplot2)
+```
+
+### ui.R
+
+The ui.R file represents the user interface of the app. Here is the code used for this:
+
+```{r ui, echo = TRUE, eval=FALSE, message=FALSE}
+library(shiny)
+
+
+shinyUI(fluidPage(
+  
+  # Application title
+  titlePanel("Normal Temperature"),
+  
+  # Sidebar with a slider input for number of bins 
+  sidebarLayout(
+    sidebarPanel(
+      h3('Select the following'),
+      
+      h5('Please note: when measuring your heart rate you should be relaxed'),
+      
+      sliderInput("hr",
+                   "Heart rate",
+                   min = 50,
+                   max = 110,
+                   value = 80),
+      
+      radioButtons("gender", "Gender",
+                   c("Female" = "2",
+                     "Male" = "1")),
+      
+      selectInput("selection", "Choose a scale:",
+                  choices = c("Fahrenheit", "Celsius"))
+    ),
+    
+   mainPanel(
+       h3(textOutput('summary')),
+       plotOutput("plot1")
+  )
+)))
+```
+
+
+### server.R
+
+The server.R file contains the backend code for the application, which is divided into three parts: a function creating the linear model, code for compiling the text part of the result for the UI and code for building the plot with the estimation on top of the training dataset. Here's how this is done:
+
+```{r server, echo = TRUE, eval=FALSE, message=FALSE}
+library(shiny)
+
+
+shinyServer(function(input, output) {
+  
+  fun1<-function(x,y){
+    normtemp<-UsingR::normtemp
+    mod1<-lm(temperature ~ as.factor(gender) + hr, data=normtemp)
+    newdata<-data.frame("hr"=x, "gender"=y)
+    prediction<-predict(mod1, newdata = newdata)
+  }
+  
+  output$summary <- renderText({
+    paste("Being a ",
+                  ifelse(input$gender==1, "Male", "Female"),
+                  " at a heart rate of ",
+                  input$hr,
+                  " your normal temperature is estimated to be ",
+                  ifelse(input$selection=="Fahrenheit",
+                         round(fun1(input$hr, input$gender),2),
+                         (round((fun1(input$hr, input$gender)-32)*5/9,2))),
+                  " ",
+                  input$selection,
+                  "."
+    )
+  })
+  
+  output$plot1<-renderPlot({
+    normtemp<-UsingR::normtemp
+    normtemp[normtemp$gender==1,]$gender<-c("Male")
+    normtemp[normtemp$gender==2,]$gender<-c("Female")
+    normtemp$gender<-as.factor(normtemp$gender)
+    
+    if(input$selection=="Celsius"){
+      normtemp$temperature=(normtemp$temperature-32)*5/9
+      }
+    
+    prediction_temp<-fun1(input$hr, input$gender)
+    
+    if(input$selection=="Celsius"){
+      prediction_temp=(prediction_temp-32)*5/9
+      }
+    
+    library(ggplot2)
+    ggplot(normtemp, aes(x=temperature, y=hr))+
+      geom_point(aes(col=gender))+
+      geom_point(aes(x=prediction_temp, y=input$hr), size=7, col='black', pch=19)+
+      geom_text(aes(x=prediction_temp, y=input$hr, label=c("Estimation"), hjust=-0.2), col='Black')+
+      theme_bw()+
+      labs(title="Temperature estimation",
+           y="Heart rate",
+           x="Temperature")
+  })
+})
+```
+
+## Enjoy!
